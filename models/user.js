@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import validator from 'validator'; // برای اعتبارسنجی ایمیل و سایر فیلدها
+import validator from 'validator'; 
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: function (v) {
-        return /^(\+98|0)?9\d{9}$/.test(v); // Regex برای شماره موبایل ایران
+        return /^(\+98|0)?9\d{9}$/.test(v); 
       },
       message: 'Please provide a valid Iranian phone number',
     },
@@ -49,19 +49,19 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// هش کردن رمز عبور قبل از ذخیره
+
 userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-// متد برای بررسی رمز عبور
+
 userSchema.methods.comparePassword = async function (candidatePassword, userPassword) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
 
-// حذف فیلدهای حساس در بازگشت کاربر
+
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;
