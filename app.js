@@ -1,18 +1,19 @@
-import express from 'express'
-import mongoose from 'mongoose';
-import connectDB from './config/db.js';
-import dotenv from 'dotenv'
-import { productrouter } from './routes/productRoutes.js';
+import express from 'express';
+import dotenv from 'dotenv';
+import userRoutes from './routes/userRoutes.js';
+
+dotenv.config();
 
 const app = express();
-dotenv.config();
-connectDB();
 
 
-app.use('/product', productrouter)
+app.use(express.json());
 
-const PORT = process.env.PORT || 5000
+app.use('/api/users', userRoutes);
 
-app.listen(PORT, () => {
-    console.log(`listening on port ${PORT}...`)
-})
+
+app.use((err, req, res, next) => {
+    res.status(500).json({ success: false, message: err.message });
+});
+
+export default app;
