@@ -1,8 +1,21 @@
 import * as userService from "../services/userservices.js";
+import { createUserSchema, updateUserSchema } from "../validation/userValidation.js";
 
 export const createUser = async (req, res) => {
   try {
-    const user = await userService.createUser(req.body);
+    const { error, value } = createUserSchema.validate(req.body, {
+      abortEarly: false,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.details.map((err) => err.message),
+      });
+    }
+
+    const user = await userService.createUser(value);
     res.status(201).json({ success: true, data: user });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -34,7 +47,19 @@ export const getUserById = async (req, res) => {
 
 export const updateUser = async (req, res) => {
   try {
-    const user = await userService.updateUser(req.params.id, req.body);
+    const { error, value } = updateUserSchema.validate(req.body, {
+      abortEarly: false,
+    });
+
+    if (error) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation error",
+        errors: error.details.map((err) => err.message),
+      });
+    }
+
+    const user = await userService.updateUser(req.params.id, value);
     if (!user) {
       return res
         .status(404)
