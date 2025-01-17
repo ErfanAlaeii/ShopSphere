@@ -6,8 +6,14 @@ import {
   generateRefreshToken,
   verifyRefreshToken,
 } from "../services/refreshTokenService.js";
+import { createUserSchema } from "../validation/userValidation.js";
 
 export const registerUser = async (req, res) => {
+  const { error } = createUserSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
+  
   const { name, email, password, phone } = req.body;
 
   try {
@@ -16,7 +22,6 @@ export const registerUser = async (req, res) => {
       return res.status(400).json({ error: "User already exists" });
     }
 
-    
     const user = new User({
       name,
       email,
@@ -24,7 +29,6 @@ export const registerUser = async (req, res) => {
       phone,
     });
 
-    
     await user.save();
 
     const accessToken = generateToken(user._id);
@@ -41,8 +45,12 @@ export const registerUser = async (req, res) => {
   }
 };
 
-
 export const loginUser = async (req, res) => {
+  const { error } = createUserSchema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
+  
   const { email, password } = req.body;
 
   try {
@@ -110,5 +118,25 @@ export const verifyToken = (req, res) => {
     return res
       .status(401)
       .json({ message: "Invalid token", error: err.message });
+  }
+};
+
+export const logoutUser = async (req, res) => {
+  const { refreshToken } = req.body;
+
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Refresh token is required" });
+  }
+
+  try {
+    const result = await RefreshToken.deleteOne({ token: refreshToken });
+    if (result.deletedCount === 0) {
+      return res.status(400).json({ message: "Invalid refresh token" });
+    }
+
+    res.status(200).json({ message: "User logged out successfully" });
+  } catch (error) {
+    console.error("Error logging out user:", error.message);
+    res.status(500).json({ error: "Error logging out user" });
   }
 };
