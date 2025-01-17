@@ -1,55 +1,114 @@
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import User from '../models/user.js';
-import { generateToken } from '../services/authService.js';
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import User from "../models/user.js";
+import { generateToken } from "../services/authService.js";
+import {
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../services/refreshTokenService.js";
+
+export const registerUser = async (req, res) => {
+  const { name, email, password, phone } = req.body;
+
+  try {
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+
+    
+    const user = new User({
+      name,
+      email,
+      password,
+      phone,
+    });
+
+    
+    await user.save();
+
+    const accessToken = generateToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
+
+    res.status(201).json({
+      message: "User registered successfully",
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error("Error registering user:", error.message);
+    res.status(500).json({ error: "Error registering user" });
+  }
+};
+
 
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-   
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: "User not found" });
     }
 
-   
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    
-    const token = generateToken(user._id);
+    const accessToken = generateToken(user._id);
+    const refreshToken = await generateRefreshToken(user._id);
 
-    
     res.status(200).json({
-      message: 'Login successful',
-      token,
+      message: "Login successful",
+      accessToken,
+      refreshToken,
     });
   } catch (error) {
-    console.error('Error logging in:', error.message);
-    res.status(500).json({ error: 'Error logging in' });
+    console.error("Error logging in:", error.message);
+    res.status(500).json({ error: "Error logging in" });
   }
 };
 
+export const refreshAccessToken = async (req, res) => {
+  const { refreshToken } = req.body;
 
-export const verifyToken = (req, res) => {
-  const token = req.body.token; 
-  const secretKey = process.env.JWT_SECRET;
-
-  if (!token) {
-      return res.status(400).json({ message: 'Token is required' });
+  if (!refreshToken) {
+    return res.status(400).json({ message: "Refresh token is required" });
   }
 
   try {
-      
-      const decoded = jwt.verify(token, secretKey);
-      return res.status(200).json({
-          message: 'Token is valid',
-          payload: decoded, 
-      });
+    const user = await verifyRefreshToken(refreshToken);
+
+    const newAccessToken = generateToken(user._id);
+
+    res.status(200).json({
+      message: "New access token generated successfully",
+      accessToken: newAccessToken,
+    });
+  } catch (error) {
+    console.error("Error refreshing access token:", error.message);
+    res.status(401).json({ error: error.message });
+  }
+};
+
+export const verifyToken = (req, res) => {
+  const token = req.body.token;
+  const secretKey = process.env.JWT_SECRET;
+
+  if (!token) {
+    return res.status(400).json({ message: "Token is required" });
+  }
+
+  try {
+    const decoded = jwt.verify(token, secretKey);
+    return res.status(200).json({
+      message: "Token is valid",
+      payload: decoded,
+    });
   } catch (err) {
-      return res.status(401).json({ message: 'Invalid token', error: err.message });
+    return res
+      .status(401)
+      .json({ message: "Invalid token", error: err.message });
   }
 };
