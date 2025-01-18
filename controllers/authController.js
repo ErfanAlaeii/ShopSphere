@@ -8,7 +8,7 @@ import {
 } from "../services/refreshTokenService.js";
 import { createUserSchema } from "../validation/userValidation.js";
 import logger from "../utils/logger.js";
-import { taskQueue } from './queue.js';
+import { taskQueue } from "../utils/queue.js";
 
 
 

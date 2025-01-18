@@ -5,7 +5,7 @@ import {
 } from "../validation/userValidation.js";
 import User from "../models/user.js";
 import client from "../utils/redisClient.js";
-import { taskQueue } from "./queue.js";
+import { taskQueue } from "../utils/queue.js";
 
 export const createUser = async (req, res) => {
   try {

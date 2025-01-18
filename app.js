@@ -5,6 +5,7 @@ import morgan from "morgan";
 import { apiLimiter } from "./middlewares/rateLimiter.js";
 import userRoutes from "./routes/userRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import { productRoutes } from "./routes/productroutes.js";
 import errorHandler from "./middlewares/errorMiddleware.js";
 import logger from "./utils/logger.js";
 import { setupSwagger } from './utils/swagger.js';
@@ -37,6 +38,7 @@ setupSwagger(app);
 // 6. Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/products", productRoutes);
 
 // 7. Error handling middleware (should be the last middleware)
 app.use(errorHandler);
