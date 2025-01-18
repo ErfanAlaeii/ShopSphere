@@ -7,13 +7,14 @@ import {
   verifyRefreshToken,
 } from "../services/refreshTokenService.js";
 import { createUserSchema } from "../validation/userValidation.js";
+import logger from "../utils/logger.js";
 
 export const registerUser = async (req, res) => {
   const { error } = createUserSchema.validate(req.body);
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
-  
+
   const { name, email, password, phone } = req.body;
 
   try {
@@ -40,7 +41,9 @@ export const registerUser = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    console.error("Error registering user:", error.message);
+    logger.error(`Error registering user: ${error.message}`, {
+      stack: error.stack,
+    });
     res.status(500).json({ error: "Error registering user" });
   }
 };
@@ -50,7 +53,7 @@ export const loginUser = async (req, res) => {
   if (error) {
     return res.status(400).json({ error: error.details[0].message });
   }
-  
+
   const { email, password } = req.body;
 
   try {
