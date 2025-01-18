@@ -9,6 +9,7 @@ import {
 import { createUserSchema } from "../validation/userValidation.js";
 import logger from "../utils/logger.js";
 
+
 export const registerUser = async (req, res) => {
   const { error } = createUserSchema.validate(req.body);
   if (error) {
@@ -57,6 +58,7 @@ export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
   try {
+    logger.info(`Login attempt for email: ${req.body.email}`);
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -76,7 +78,9 @@ export const loginUser = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    console.error("Error logging in:", error.message);
+    logger.error(
+      `Login failed for email: ${req.body.email} - ${error.message}`
+    );
     res.status(500).json({ error: "Error logging in" });
   }
 };
