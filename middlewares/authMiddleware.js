@@ -8,15 +8,19 @@ export const authenticate = async (req, res, next) => {
   }
 
   try {
-    const decoded = verifyToken(token); // بررسی و دیکد توکن
+    const decoded = verifyToken(token); 
     req.user = decoded
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    req.user = { id: user._id, role: user.role }; // ذخیره نقش در req.user
-    next(); // ادامه به middleware بعدی
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'Your account is deactivated. Please contact support.' });
+    }
+
+    req.user = { id: user._id, role: user.role }; 
+    next(); 
   } catch (error) {
     res.status(401).json({ error: 'Invalid or expired token' });
   }

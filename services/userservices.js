@@ -9,6 +9,10 @@ export const getAllUsers = async () => {
   return await User.find();
 };
 
+export const toggleUserActiveStatus = async (userId) => {
+  return await User.findById(userId);
+};
+
 export const getUserById = async (id) => {
   return await User.findById(id);
 };
@@ -23,3 +27,5 @@ export const updateUser = async (id, updateData) => {
 export const deleteUser = async (id) => {
   return await User.findByIdAndDelete(id);
 };
+
+

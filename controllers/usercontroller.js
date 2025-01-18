@@ -26,6 +26,28 @@ export const createUser = async (req, res) => {
   }
 };
 
+export const toggleUserActiveStatus = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await userService.toggleUserActiveStatus(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.isActive = !user.isActive;
+    await user.save();
+
+    res.status(200).json({
+      message: `User has been ${user.isActive ? "activated" : "deactivated"}`,
+      user,
+    });
+  } catch (error) {
+    console.error("Error toggling user active status:", error.message);
+    res.status(500).json({ error: "Error toggling user active status" });
+  }
+};
+
 export const getAllUsers = async (req, res) => {
   try {
     const { page = 1, limit = 10, role, isActive } = req.query;
