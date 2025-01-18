@@ -1,5 +1,9 @@
 import * as userService from "../services/userservices.js";
-import { createUserSchema, updateUserSchema } from "../validation/userValidation.js";
+import {
+  createUserSchema,
+  updateUserSchema,
+} from "../validation/userValidation.js";
+import User from "../models/user.js";
 
 export const createUser = async (req, res) => {
   try {
@@ -24,8 +28,31 @@ export const createUser = async (req, res) => {
 
 export const getAllUsers = async (req, res) => {
   try {
-    const users = await userService.getAllUsers();
-    res.status(200).json({ success: true, data: users });
+    const { page = 1, limit = 10, role, isActive } = req.query;
+
+    const pageNumber = parseInt(page, 10);
+    const pageLimit = parseInt(limit, 10);
+
+    const filters = {};
+    if (role) filters.role = role;
+    if (isActive) filters.isActive = isActive === "true";
+
+    const users = await User.find(filters)
+      .skip((pageNumber - 1) * pageLimit)
+      .limit(pageLimit)
+      .exec();
+
+    const totalUsers = await User.countDocuments(filters);
+
+    const totalPages = Math.ceil(totalUsers / pageLimit);
+
+    res.status(200).json({
+      success: true,
+      data: users,
+      totalUsers,
+      totalPages,
+      currentPage: pageNumber,
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
