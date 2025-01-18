@@ -1,18 +1,18 @@
 import express from "express";
 import * as userController from "../controllers/usercontroller.js";
-import { authenticate } from "../middlewares/authMiddleware.js";
+import { authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/", userController.createUser);
+router.post("/", authorizeRoles('admin'), userController.createUser);
 
-router.get("/", userController.getAllUsers);
+router.get("/", authorizeRoles('admin'), userController.getAllUsers);
 
-router.get("/:id", userController.getUserById);
+router.get("/:id", authorizeRoles('admin'), userController.getUserById);
 
-router.put("/:id", userController.updateUser);
+router.put("/:id", authorizeRoles('admin'), userController.updateUser);
 
-router.delete("/:id", userController.deleteUser);
+router.delete("/:id", authorizeRoles('admin'), userController.deleteUser);
 
 
 
