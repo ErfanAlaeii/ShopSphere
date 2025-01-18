@@ -5,6 +5,7 @@ import {
 } from "../validation/userValidation.js";
 import User from "../models/user.js";
 import client from "../utils/redisClient.js";
+import { taskQueue } from "./queue.js";
 
 export const createUser = async (req, res) => {
   try {
@@ -21,7 +22,7 @@ export const createUser = async (req, res) => {
 
     const user = await userService.createUser(value);
 
-    client.del("users:*");
+    taskQueue.add("clearCache", { cacheKey: "users:*" });
 
     res.status(201).json({ success: true, data: user });
   } catch (error) {
@@ -156,7 +157,7 @@ export const updateUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    client.del(`user:${req.params.id}`);
+    taskQueue.add("clearCache", { cacheKey: `user:${req.params.id}` });
 
     res.status(200).json({ success: true, data: user });
   } catch (error) {
@@ -173,8 +174,8 @@ export const deleteUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
-    client.del(`user:${req.params.id}`);
-    client.del("users:*");
+    taskQueue.add("clearCache", { cacheKey: `user:${req.params.id}` });
+    taskQueue.add("clearCache", { cacheKey: "users:*" });
 
     res
       .status(200)
