@@ -4,13 +4,13 @@ import {
   updateUserSchema,
 } from "../validation/userValidation.js";
 import User from "../models/user.js";
+import client from "../utils/redisClient.js";
 
 export const createUser = async (req, res) => {
   try {
     const { error, value } = createUserSchema.validate(req.body, {
       abortEarly: false,
     });
-
     if (error) {
       return res.status(400).json({
         success: false,
@@ -20,6 +20,9 @@ export const createUser = async (req, res) => {
     }
 
     const user = await userService.createUser(value);
+
+    client.del("users:*");
+
     res.status(201).json({ success: true, data: user });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -51,7 +54,6 @@ export const toggleUserActiveStatus = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const { page = 1, limit = 10, role, isActive } = req.query;
-
     const pageNumber = parseInt(page, 10);
     const pageLimit = parseInt(limit, 10);
 
@@ -59,21 +61,39 @@ export const getAllUsers = async (req, res) => {
     if (role) filters.role = role;
     if (isActive) filters.isActive = isActive === "true";
 
-    const users = await User.find(filters)
-      .skip((pageNumber - 1) * pageLimit)
-      .limit(pageLimit)
-      .exec();
+    const cacheKey = `users:${JSON.stringify(
+      filters
+    )}:${pageNumber}:${pageLimit}`;
 
-    const totalUsers = await User.countDocuments(filters);
+    client.get(cacheKey, async (err, data) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: "Redis error" });
+      }
 
-    const totalPages = Math.ceil(totalUsers / pageLimit);
+      if (data) {
+        return res.status(200).json({
+          success: true,
+          data: JSON.parse(data),
+        });
+      } else {
+        const users = await User.find(filters)
+          .skip((pageNumber - 1) * pageLimit)
+          .limit(pageLimit)
+          .exec();
 
-    res.status(200).json({
-      success: true,
-      data: users,
-      totalUsers,
-      totalPages,
-      currentPage: pageNumber,
+        const totalUsers = await User.countDocuments(filters);
+        const totalPages = Math.ceil(totalUsers / pageLimit);
+
+        client.setex(cacheKey, 3600, JSON.stringify(users));
+
+        return res.status(200).json({
+          success: true,
+          data: users,
+          totalUsers,
+          totalPages,
+          currentPage: pageNumber,
+        });
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -82,13 +102,35 @@ export const getAllUsers = async (req, res) => {
 
 export const getUserById = async (req, res) => {
   try {
-    const user = await userService.getUserById(req.params.id);
-    if (!user) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-    res.status(200).json({ success: true, data: user });
+    const { id } = req.params;
+    const cacheKey = `user:${id}`;
+
+    client.get(cacheKey, async (err, data) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: "Redis error" });
+      }
+
+      if (data) {
+        return res.status(200).json({
+          success: true,
+          data: JSON.parse(data),
+        });
+      } else {
+        const user = await userService.getUserById(id);
+        if (!user) {
+          return res
+            .status(404)
+            .json({ success: false, message: "User not found" });
+        }
+
+        client.setex(cacheKey, 3600, JSON.stringify(user));
+
+        return res.status(200).json({
+          success: true,
+          data: user,
+        });
+      }
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -99,7 +141,6 @@ export const updateUser = async (req, res) => {
     const { error, value } = updateUserSchema.validate(req.body, {
       abortEarly: false,
     });
-
     if (error) {
       return res.status(400).json({
         success: false,
@@ -114,6 +155,9 @@ export const updateUser = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
+
+    client.del(`user:${req.params.id}`);
+
     res.status(200).json({ success: true, data: user });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
@@ -128,6 +172,10 @@ export const deleteUser = async (req, res) => {
         .status(404)
         .json({ success: false, message: "User not found" });
     }
+
+    client.del(`user:${req.params.id}`);
+    client.del("users:*");
+
     res
       .status(200)
       .json({ success: true, message: "User deleted successfully" });

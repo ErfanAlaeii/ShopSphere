@@ -8,7 +8,7 @@ import {
 } from "../services/refreshTokenService.js";
 import { createUserSchema } from "../validation/userValidation.js";
 import logger from "../utils/logger.js";
-
+import client from "../utils/redisClient.js";
 
 export const registerUser = async (req, res) => {
   const { error } = createUserSchema.validate(req.body);
@@ -140,6 +140,8 @@ export const logoutUser = async (req, res) => {
     if (result.deletedCount === 0) {
       return res.status(400).json({ message: "Invalid refresh token" });
     }
+
+    client.del(`user:refreshToken:${refreshToken}`);
 
     res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
