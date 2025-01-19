@@ -101,6 +101,24 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
+export const verifyEmail = async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.emailVerified = true;
+    await user.save();
+
+    res.status(200).json({ message: "Email verified successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const getUserById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -142,6 +160,7 @@ export const updateUser = async (req, res) => {
     const { error, value } = updateUserSchema.validate(req.body, {
       abortEarly: false,
     });
+
     if (error) {
       return res.status(400).json({
         success: false,
@@ -150,16 +169,22 @@ export const updateUser = async (req, res) => {
       });
     }
 
-    const user = await userService.updateUser(req.params.id, value);
+    const { userId } = req.params;
+
+    const user = await userService.updateUser(userId, value);
     if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
-    taskQueue.add("clearCache", { cacheKey: `user:${req.params.id}` });
+    taskQueue.add("clearCache", { cacheKey: `user:${userId}` });
 
-    res.status(200).json({ success: true, data: user });
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      data: user,
+    });
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });
   }

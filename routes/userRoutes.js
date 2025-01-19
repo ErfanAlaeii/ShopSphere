@@ -2,12 +2,6 @@ import express from "express";
 import * as userController from "../controllers/usercontroller.js";
 import { authorizeRoles, authenticate } from "../middlewares/authMiddleware.js";
 
-/**
- * @swagger
- * tags:
- *   name: User
- *   description: CRUD operations on users
- */
 
 const router = express.Router();
 
@@ -108,7 +102,59 @@ router.get("/", authorizeRoles('admin'), userController.getAllUsers);
  *         description: User not found.
  */
 
+
+
 router.patch('/:userId/toggle-active', authenticate, authorizeRoles('admin'), userController.toggleUserActiveStatus);
+
+/**
+ * @swagger
+ * /users/{userId}/verify-email:
+ *   patch:
+ *     summary: Verify user's email
+ *     description: Updates the user's email verification status to true.
+ *     tags:
+ *       - Users
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The ID of the user whose email is being verified
+ *     responses:
+ *       200:
+ *         description: Email verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Email verified successfully
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: User not found
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: An error occurred
+ */
+router.patch("/users/:userId/verify-email", userController.verifyEmail);
+
 
 /**
  * @swagger
