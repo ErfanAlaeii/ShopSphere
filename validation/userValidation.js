@@ -23,6 +23,15 @@ export const createUserSchema = Joi.object({
     }),
   role: Joi.string().valid("user", "admin").default("user"),
   isActive: Joi.boolean().default(true),
+  address: Joi.string().optional().messages({
+    "string.empty": "Address cannot be empty",
+  }),  
+  profilePicture: Joi.string().uri().optional().messages({
+    "string.uri": "Please provide a valid URL for profile picture",
+  }),  
+  emailVerified: Joi.boolean().default(false),  
+}).messages({
+  "object.unknown": "Invalid field provided",
 });
 
 export const updateUserSchema = Joi.object({
@@ -33,4 +42,12 @@ export const updateUserSchema = Joi.object({
     .optional(),
   role: Joi.string().valid("user", "admin").optional(),
   isActive: Joi.boolean().optional(),
-}).min(1); 
+  address: Joi.string().optional().messages({
+    "string.empty": "Address cannot be empty",
+  }),  
+  profilePicture: Joi.string().uri().optional().messages({
+    "string.uri": "Please provide a valid URL for profile picture",
+  }),  
+}).min(1).messages({
+  "object.unknown": "Invalid field provided",
+});
