@@ -10,7 +10,7 @@ export const createOrder = async (req, res) => {
     return res.status(400).json({ error: error.details[0].message });
   }
 
-  const { userId, products, shippingAddress, couponCode } = req.body;
+  const { userId, products, shippingAddress, couponCode, paymentDetails } = req.body;
 
   let totalPrice = 0;
   const productDetails = await Product.find({
@@ -35,7 +35,6 @@ export const createOrder = async (req, res) => {
 
   let discount = 0;
 
-  
   if (couponCode) {
     const coupon = await Coupon.findOne({ code: couponCode });
     if (coupon) {
@@ -59,6 +58,8 @@ export const createOrder = async (req, res) => {
       discount,
       finalPrice,
       shippingAddress,
+      paymentStatus: "unpaid", 
+      paymentDetails, 
     });
 
     await order.save();
@@ -95,26 +96,27 @@ export const getUserOrders = async (req, res) => {
 };
 
 export const updateOrderStatus = async (req, res) => {
-  const { orderId, status } = req.body;
-
-  try {
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
+    const { orderId, status } = req.body;
+  
+    try {
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+  
+      order.status = status; 
+      await order.save();
+  
+      res.status(200).json({
+        message: "Order status updated successfully",
+        orderId: order._id,
+        status: order.status,
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-
-    order.status = status;
-    await order.save();
-
-    res.status(200).json({
-      message: "Order status updated successfully",
-      orderId: order._id,
-      status: order.status,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 };
+
 
 export const deleteOrder = async (req, res) => {
   const { orderId } = req.params;
@@ -132,24 +134,26 @@ export const deleteOrder = async (req, res) => {
 };
 
 export const completeOrderPayment = async (req, res) => {
-  const { orderId, paymentDetails } = req.body;
-
-  try {
-    const order = await Order.findById(orderId);
-    if (!order) {
-      return res.status(404).json({ error: "Order not found" });
+    const { orderId, paymentDetails } = req.body;
+  
+    try {
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+  
+      order.status = "paid"; 
+      order.paymentDetails = paymentDetails; 
+      order.paymentStatus = "paid"; 
+      await order.save();
+  
+      res.status(200).json({
+        message: "Order payment completed successfully",
+        orderId: order._id,
+        status: order.status,
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-
-    order.status = "paid";
-    order.paymentDetails = paymentDetails;
-    await order.save();
-
-    res.status(200).json({
-      message: "Order payment completed successfully",
-      orderId: order._id,
-      status: order.status,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 };
+
