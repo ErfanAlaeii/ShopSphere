@@ -1,6 +1,6 @@
 import { createOrderSchema } from "../validation/orderValidator.js";
 import Order from "../models/Order.js";
-import Product from "../models/Product.js";
+import { Product } from "../models/products.js";
 import Coupon from "../models/Coupon.js";
 
 export const createOrder = async (req, res) => {

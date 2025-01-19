@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
-import validator from 'validator'; 
+import validator from 'validator';
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -29,7 +29,7 @@ const userSchema = new mongoose.Schema({
     unique: true,
     validate: {
       validator: function (v) {
-        return /^(\+98|0)?9\d{9}$/.test(v); 
+        return /^(\+98|0)?9\d{9}$/.test(v);
       },
       message: 'Please provide a valid Iranian phone number',
     },
@@ -43,24 +43,47 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  address: {
+    type: String,
+    required: false,
+  },
+  profilePicture: {
+    type: String,
+    required: false,
+  },
+  emailVerified: {
+    type: Boolean,
+    default: false,
+  },
+  lastLogin: {
+    type: Date,
+    default: null,
+  },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  updatedAt: {
     type: Date,
     default: Date.now,
   },
 });
 
-
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  if (!this.isModified('password')) {
+    this.updatedAt = Date.now();
+  }
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
   next();
 });
-
 
 userSchema.methods.comparePassword = async function (candidatePassword, userPassword) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
-
 
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
