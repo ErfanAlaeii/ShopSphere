@@ -1,12 +1,12 @@
-import AWS from "aws-sdk";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
-AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+const s3 = new S3Client({
   region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  },
 });
-
-const s3 = new AWS.S3();
 
 /**
  * Save image to S3
@@ -25,8 +25,10 @@ export const uploadToS3 = async (imageBuffer, bucketName, fileName) => {
   };
 
   try {
-    const data = await s3.upload(params).promise();
-    return data.Location;
+    const command = new PutObjectCommand(params);
+    const data = await s3.send(command);
+
+    return `https://${bucketName}.s3.${process.env.AWS_REGION}.amazonaws.com/${fileName}`;
   } catch (error) {
     console.error("Error uploading to S3:", error.message);
     throw new Error("Error uploading to S3");

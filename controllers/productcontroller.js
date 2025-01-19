@@ -1,7 +1,7 @@
 import { Product } from "../models/products.js";
 import { createProductSchema, updateProductSchema } from "../validation/productvalidation.js";
 import client from "../utils/redisClient.js";
-import imageProcessingQueue from "../utils/productQueue.js";
+import { imageProcessingQueue } from "../utils/productQueue.js";
 
 export const createProduct = async (req, res) => {
     const { error } = createProductSchema.validate(req.body);
