@@ -8,6 +8,7 @@ import authRoutes from "./routes/authRoutes.js";
 import { productRoutes } from "./routes/productroutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
+import reviewRoutes from "./routes/reviewRoutes.js";
 import errorHandler from "./middlewares/errorMiddleware.js";
 import logger from "./utils/logger.js";
 import { setupSwagger } from './utils/swagger.js';
@@ -46,6 +47,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // 8. Error handling middleware (should be the last app.use)
 app.use(errorHandler);
