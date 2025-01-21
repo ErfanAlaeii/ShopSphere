@@ -13,7 +13,6 @@ export const createProduct = async (req, res) => {
       const product = new Product(req.body);
       await product.save();
   
-      
       if (req.body.images) {
         req.body.images.forEach((imageUrl) => {
           imageProcessingQueue.add({ imageUrl });
@@ -24,30 +23,55 @@ export const createProduct = async (req, res) => {
     } catch (error) {
       res.status(400).json({ success: false, message: error.message });
     }
-  };
-
+};
 
 export const getAllProducts = async (req, res) => {
+    const { keyword, category, minPrice, maxPrice, rating, sortBy } = req.query;
+
     try {
-      const cacheKey = "products:all";
-  
-      
-      const cachedProducts = await client.get(cacheKey);
-      if (cachedProducts) {
-        return res.status(200).json({ success: true, data: JSON.parse(cachedProducts) });
-      }
-  
-      
-      const products = await Product.find();
-  
-      
-      await client.setEx(cacheKey, 3600, JSON.stringify(products));
-  
-      res.status(200).json({ success: true, data: products });
+        const cacheKey = "products:all";
+
+        const cachedProducts = await client.get(cacheKey);
+        if (cachedProducts) {
+            return res.status(200).json({ success: true, data: JSON.parse(cachedProducts) });
+        }
+
+        const filter = {};
+
+        if (keyword) {
+            filter.name = { $regex: keyword, $options: "i" };
+        }
+
+        if (category) {
+            filter.category = category;
+        }
+
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) filter.price.$gte = Number(minPrice);
+            if (maxPrice) filter.price.$lte = Number(maxPrice);
+        }
+
+        if (rating) {
+            filter.rating = { $gte: Number(rating) };
+        }
+
+        let query = Product.find(filter);
+
+        if (sortBy) {
+            const sortOptions = sortBy.split(",").join(" ");
+            query = query.sort(sortOptions);
+        }
+
+        const products = await query;
+
+        await client.setEx(cacheKey, 3600, JSON.stringify(products));
+
+        res.status(200).json({ success: true, data: products });
     } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
-  };
+};
 
 export const getProductById = async (req, res) => {
     try {
