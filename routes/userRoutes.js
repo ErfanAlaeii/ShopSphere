@@ -43,7 +43,8 @@ const router = express.Router();
  *         description: Unauthorized or insufficient permissions.
  */
 
-router.post("/", authorizeRoles('admin'), userController.createUser);
+router.post("/", authenticate, authorizeRoles('admin'), userController.createUser);
+
 
 /**
  * @swagger
@@ -76,7 +77,7 @@ router.post("/", authorizeRoles('admin'), userController.createUser);
  *         description: Unauthorized or insufficient permissions.
  */
 
-router.get("/", authorizeRoles('admin'), userController.getAllUsers);
+router.get("/", authenticate, authorizeRoles('admin'), userController.getAllUsers);
 
 /**
  * @swagger
@@ -180,7 +181,7 @@ router.patch("/users/:userId/verify-email", userController.verifyEmail);
  *         description: User not found.
  */
 
-router.get("/:id", authorizeRoles('admin'), userController.getUserById);
+router.get("/:id", authenticate, authorizeRoles('admin'), userController.getUserById);
 
 /**
  * @swagger
@@ -219,7 +220,7 @@ router.get("/:id", authorizeRoles('admin'), userController.getUserById);
  *         description: User not found.
  */
 
-router.put("/:id", authorizeRoles('admin'), userController.updateUser);
+router.put("/:id", authenticate, authorizeRoles('admin'), userController.updateUser);
 
 /**
  * @swagger
@@ -245,7 +246,7 @@ router.put("/:id", authorizeRoles('admin'), userController.updateUser);
  *         description: User not found.
  */
 
-router.delete("/:id", authorizeRoles('admin'), userController.deleteUser);
+router.delete("/:id", authenticate, authorizeRoles('admin'), userController.deleteUser);
 
 
 
