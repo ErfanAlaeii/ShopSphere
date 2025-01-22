@@ -6,7 +6,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "../controllers/productcontroller.js";
-import { authorizeRoles } from "../middlewares/authMiddleware.js";
+import { authenticate, authorizeRoles } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
@@ -126,7 +126,7 @@ router.get("/:id", getProductById);
  *         description: Internal server error
  */
 
-router.post("/", authorizeRoles("admin"), createProduct);
+router.post("/", authenticate, authorizeRoles("admin"), createProduct);
 
 /**
  * @swagger
@@ -172,7 +172,7 @@ router.post("/", authorizeRoles("admin"), createProduct);
  *         description: Internal server error
  */
 
-router.put("/:id", authorizeRoles("admin"), updateProduct);
+router.put("/:id", authenticate, authorizeRoles("admin"), updateProduct);
 
 /**
  * @swagger
@@ -203,6 +203,6 @@ router.put("/:id", authorizeRoles("admin"), updateProduct);
  *         description: Internal server error
  */
 
-router.delete("/:id", authorizeRoles("admin"), deleteProduct);
+router.delete("/:id", authenticate, authorizeRoles("admin"), deleteProduct);
 
 export { router as productRoutes };
