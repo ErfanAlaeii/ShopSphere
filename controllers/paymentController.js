@@ -1,4 +1,9 @@
-import { createPayment, verifyPayment } from "../services/paymentService.js";
+import {
+  createPayment,
+  verifyPayment,
+  getPaymentByAuthority,
+  getPaymentsByUser,
+} from "../services/paymentService.js";
 import {
   createPaymentSchema,
   verifyPaymentSchema,
@@ -6,9 +11,8 @@ import {
 
 export const initiatePayment = async (req, res) => {
   try {
-    const { error } = createPaymentSchema.validate(req.body);
+    const { error, value } = createPaymentSchema.validate(req.body);
     if (error) {
-      showErrorNotification("Validation error");
       return res.status(400).json({
         success: false,
         message: "Validation error",
@@ -16,22 +20,29 @@ export const initiatePayment = async (req, res) => {
       });
     }
 
-    const { amount, description, callbackURL } = req.body;
-    const paymentUrl = await createPayment(amount, description, callbackURL);
+    const result = await createPayment(value.order, value.user);
 
-    showSuccessNotification("Payment created successfully");
-    res.status(200).json({ success: true, paymentUrl });
+    res.status(201).json({
+      success: true,
+      message: "Payment initiated successfully",
+      data: {
+        paymentUrl: result.paymentUrl,
+        authority: result.authority,
+      },
+    });
   } catch (error) {
-    showErrorNotification(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
 
 export const confirmPayment = async (req, res) => {
   try {
-    const { error } = verifyPaymentSchema.validate(req.body);
+    const { error, value } = verifyPaymentSchema.validate(req.body);
     if (error) {
-      showErrorNotification("Validation error");
       return res.status(400).json({
         success: false,
         message: "Validation error",
@@ -39,13 +50,58 @@ export const confirmPayment = async (req, res) => {
       });
     }
 
-    const { authority, amount } = req.body;
-    const payment = await verifyPayment(authority, amount);
+    const result = await verifyPayment(value.authority, value.amount);
 
-    showSuccessNotification("Payment verified successfully");
-    res.status(200).json({ success: true, payment });
+    res.status(200).json({
+      success: true,
+      message: "Payment verified successfully",
+      data: {
+        refId: result.refId,
+        payment: result.payment,
+        order: result.order,
+      },
+    });
   } catch (error) {
-    showErrorNotification(error.message);
-    res.status(500).json({ success: false, message: error.message });
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getPaymentStatus = async (req, res) => {
+  try {
+    const { authority } = req.params;
+    const payment = await getPaymentByAuthority(authority);
+
+    res.status(200).json({
+      success: true,
+      data: payment,
+    });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export const getUserPayments = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const payments = await getPaymentsByUser(userId);
+
+    res.status(200).json({
+      success: true,
+      data: payments,
+    });
+  } catch (error) {
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
