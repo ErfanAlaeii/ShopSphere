@@ -8,6 +8,8 @@ import {
     completeOrderPayment,
 } from "../controllers/orderController.js";
 
+import { validateOrderRequest } from "../middlewares/ordervalidationMiddleware.js";
+
 const router = express.Router();
 
 /**
@@ -61,7 +63,7 @@ const router = express.Router();
  *         description: Internal server error
  */
 
-router.post("/create", createOrder);
+router.post('/create', validateOrderRequest, createOrder);
 
 /**
  * @swagger
