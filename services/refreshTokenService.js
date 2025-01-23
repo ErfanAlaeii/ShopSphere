@@ -24,7 +24,9 @@ export const generateRefreshToken = async (userId) => {
 
 export const verifyRefreshToken = async (token) => {
   try {
-    const decoded = jwt.verify(token, JWT_REFRESH_SECRET);
+   
+    jwt.verify(token, JWT_REFRESH_SECRET);
+
     const storedToken = await RefreshToken.findOne({ token }).populate('user');
 
     if (!storedToken || new Date() > storedToken.expiresAt) {
@@ -35,8 +37,4 @@ export const verifyRefreshToken = async (token) => {
   } catch (error) {
     throw new Error('Invalid or expired refresh token');
   }
-};
-
-export const revokeRefreshToken = async (token) => {
-  await RefreshToken.findOneAndDelete({ token });
 };
