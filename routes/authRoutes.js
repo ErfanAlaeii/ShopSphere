@@ -2,6 +2,7 @@ import express from 'express';
 import { loginUser, registerUser, verifyToken, refreshAccessToken ,logoutUser} from '../controllers/authController.js';
 import { authenticate,authorizeRoles } from '../middlewares/authMiddleware.js';
 import { getAdminData } from '../controllers/adminController.js';
+import { validateRefreshTokenRequest } from '../middlewares/validationMiddleware.js';
 /**
  * @swagger
  * tags:
@@ -155,7 +156,7 @@ router.get('/me', authenticate);
  *       401:
  *         description: Refresh token is invalid or expired
  */
-router.post('/refresh-token', refreshAccessToken);
+router.post('/refresh-token', validateRefreshTokenRequest, refreshAccessToken);
 /**
  * @swagger
  * /auth/logout:
