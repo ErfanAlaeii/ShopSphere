@@ -43,7 +43,7 @@ app.use(express.static('public'));
 
 // 7. API routes (define routes after other middleware)
 app.use("/api/users", userRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", apiLimiter, authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
