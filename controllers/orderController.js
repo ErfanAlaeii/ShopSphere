@@ -46,9 +46,12 @@ export const createOrder = async (req, res, next) => {
       if (!couponCodeRegex.test(couponCode)) {
         throw createHttpError(400, "Invalid coupon code format");
       }
-
-      const coupon = await Coupon.findOne({ code: couponCode.trim() }).exec();
-
+    
+      const coupon = await Coupon.findOne({
+        where: {
+          code: couponCode.trim()
+        }
+      });
       if (coupon) {
         if (coupon.expiresAt > Date.now()) {
           discount = coupon.discount;
