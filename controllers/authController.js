@@ -9,8 +9,7 @@ import {
 import { createUserSchema } from "../validation/userValidation.js";
 import logger from "../utils/logger.js";
 import { taskQueue } from "../utils/queue.js";
-
-
+import sanitize from "mongo-sanitize"; 
 
 export const registerUser = async (req, res) => {
   const { error } = createUserSchema.validate(req.body);
@@ -21,22 +20,22 @@ export const registerUser = async (req, res) => {
   const { name, email, password, phone } = req.body;
 
   try {
-    const existingUser = await User.findOne({ email });
+    const sanitizedEmail = sanitize(email); 
+    const existingUser = await User.findOne({ email: sanitizedEmail });
     if (existingUser) {
       return res.status(400).json({ error: "User already exists" });
     }
 
     const user = new User({
       name,
-      email,
+      email: sanitizedEmail,
       password,
       phone,
     });
 
     await user.save();
 
-    
-    taskQueue.add('clearCache', { cacheKey: `user:${user._id}` });
+    taskQueue.add("clearCache", { cacheKey: `user:${user._id}` });
 
     const accessToken = generateToken(user._id);
     const refreshToken = await generateRefreshToken(user._id);
@@ -64,7 +63,10 @@ export const loginUser = async (req, res) => {
 
   try {
     logger.info(`Login attempt for email: ${req.body.email}`);
-    const user = await User.findOne({ email }).select("+password");
+    const sanitizedEmail = sanitize(email); 
+    const user = await User.findOne({ email: sanitizedEmail }).select(
+      "+password"
+    );
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -146,8 +148,9 @@ export const logoutUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid refresh token" });
     }
 
-   
-    taskQueue.add('clearCache', { cacheKey: `user:refreshToken:${refreshToken}` });
+    taskQueue.add("clearCache", {
+      cacheKey: `user:refreshToken:${refreshToken}`,
+    });
 
     res.status(200).json({ message: "User logged out successfully" });
   } catch (error) {
@@ -155,4 +158,3 @@ export const logoutUser = async (req, res) => {
     res.status(500).json({ error: "Error logging out user" });
   }
 };
-
