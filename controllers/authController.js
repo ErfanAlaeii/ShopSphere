@@ -10,6 +10,7 @@ import { createUserSchema } from "../validation/userValidation.js";
 import logger from "../utils/logger.js";
 import { taskQueue } from "../utils/queue.js";
 import sanitize from "mongo-sanitize"; 
+import Joi from 'joi';
 
 export const registerUser = async (req, res) => {
   const { error } = createUserSchema.validate(req.body);
@@ -93,24 +94,26 @@ export const loginUser = async (req, res) => {
 };
 
 export const refreshAccessToken = async (req, res) => {
-  const { refreshToken } = req.body;
+  const schema = Joi.object({
+    refreshToken: Joi.string().required().trim(),
+  });
 
-  if (!refreshToken) {
-    return res.status(400).json({ message: "Refresh token is required" });
+  const { error } = schema.validate(req.body);
+  if (error) {
+    return res.status(400).json({ message: 'Invalid refresh token format.' });
   }
+
+  const { refreshToken } = req.body;
 
   try {
     const user = await verifyRefreshToken(refreshToken);
-
     const newAccessToken = generateToken(user._id);
-
     res.status(200).json({
-      message: "New access token generated successfully",
+      message: 'New access token generated successfully',
       accessToken: newAccessToken,
     });
   } catch (error) {
-    console.error("Error refreshing access token:", error.message);
-    res.status(401).json({ error: error.message });
+    res.status(401).json({ message: error.message });
   }
 };
 
