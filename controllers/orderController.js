@@ -44,24 +44,26 @@ export const createOrder = async (req, res, next) => {
 
     if (couponCode) {
       if (!couponCodeRegex.test(couponCode)) {
-        throw createHttpError(400, "Invalid coupon code format");
+        throw createHttpError(400, "Invalid coupon code format.");
       }
-    
+
+      const sanitizedCouponCode = couponCode.trim();
+
       const coupon = await Coupon.findOne({
-        where: {
-          code: couponCode.trim()
-        }
-      });
+        code: sanitizedCouponCode,
+      }).exec();
+
       if (coupon) {
         if (coupon.expiresAt > Date.now()) {
           discount = coupon.discount;
         } else {
-          throw createHttpError(400, "Coupon code has expired");
+          throw createHttpError(400, "Coupon code has expired.");
         }
       } else {
-        throw createHttpError(404, "Coupon code not found");
+        throw createHttpError(404, "Coupon code not found.");
       }
     }
+
     const finalPrice = totalPrice - discount;
 
     const order = new Order({
