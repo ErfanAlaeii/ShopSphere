@@ -1,9 +1,9 @@
 # ShopSphere Backend
 
-![ShopSphere Logo](https://your-logo-url.com/logo.png)
+
 
 ## 📌 Overview
-ShopSphere is a backend service for an e-commerce platform built with **Node.js**, **Express.js**, and **MySQL**. It provides RESTful APIs for user authentication, product management, order processing, and payment integration using **Zarinpal**.
+ShopSphere is a backend service for an e-commerce platform built with **Node.js**, **Express.js**, and **MongoDB**. It provides RESTful APIs for user authentication, product management, order processing, and payment integration using **Zarinpal**.
 
 ## 🚀 Features
 - User authentication with **JWT**
