@@ -16,8 +16,8 @@ ShopSphere is a backend service for an e-commerce platform built with **Node.js*
 
 ## 🛠️ Tech Stack
 - **Node.js** & **Express.js** - Backend Framework
-- **MySQL** - Relational Database
-- **Sequelize** - ORM for database management
+- **MongoDB** -  Database
+- **Mongoose** - ORM for database management
 - **AWS S3** - File storage solution
 - **BullMQ** - Queue management for background jobs
 - **Zarinpal** - Payment gateway integration
@@ -50,9 +50,9 @@ AWS_REGION=your_aws_region
 ZARINPAL_MERCHANT_ID=your_zarinpal_id
 ```
 
-### 4️⃣ Run Migrations (If using Sequelize)
+### 4️⃣ Run Migrations (If using Mongoose)
 ```sh
-npx sequelize-cli db:migrate
+npx Mongoose-cli db:migrate
 ```
 
 ### 5️⃣ Start the Server
