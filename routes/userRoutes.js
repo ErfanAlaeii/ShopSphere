@@ -1,6 +1,7 @@
 import express from "express";
 import * as userController from "../controllers/usercontroller.js";
 import { authorizeRoles, authenticate } from "../middlewares/authMiddleware.js";
+import rateLimit from "express-rate-limit";
 
 
 const router = express.Router();
@@ -103,9 +104,10 @@ router.get("/", authenticate, authorizeRoles('admin'), userController.getAllUser
  *         description: User not found.
  */
 
-
-
 router.patch('/:userId/toggle-active', authenticate, authorizeRoles('admin'), userController.toggleUserActiveStatus);
+
+
+router.post('/forgot-password', rateLimit, userController.passwordRecovery)
 
 /**
  * @swagger

@@ -6,6 +6,8 @@ import {
 import User from "../models/user.js";
 import client from "../utils/redisClient.js";
 import { taskQueue } from "../utils/queue.js";
+import { forgotPasswordSchema } from "../validation/emailValidation.js";
+import crypto from "crypto";
 
 export const createUser = async (req, res) => {
   try {
@@ -207,5 +209,47 @@ export const deleteUser = async (req, res) => {
       .json({ success: true, message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+export const passwordRecovery = async (req, res) => {
+  try {
+    const { error } = forgotPasswordSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ message: error.details[0].message });
+    }
+
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        message:
+          "If an account with this email exists, a reset link has been sent.",
+      });
+    }
+
+    const resetToken = await userService.generateResetPasswordToken();
+    const hashedToken = crypto
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
+
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 3600000;
+
+    await user.save();
+
+    await userService.sendResetPasswordEmail(user.email, resetToken);
+
+    res.status(200).json({
+      message:
+        "If an account with this email exists, a reset link has been sent.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong",
+      error: error.message,
+    });
   }
 };
