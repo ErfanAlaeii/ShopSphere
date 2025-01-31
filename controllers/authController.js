@@ -64,15 +64,15 @@ export const loginUser = async (req, res) => {
 
   try {
     logger.info(`Login attempt for email: ${req.body.email}`);
-    const sanitizedEmail = sanitize(email); 
-    const user = await User.findOne({ email: sanitizedEmail }).select(
-      "+password"
-    );
+    const sanitizedEmail = sanitize(email);
+    const user = await User.findOne({ email: sanitizedEmail }).select("+password");
+
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+   
+    const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
@@ -86,12 +86,11 @@ export const loginUser = async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    logger.error(
-      `Login failed for email: ${req.body.email} - ${error.message}`
-    );
+    logger.error(`Login failed for email: ${req.body.email} - ${error.message}`);
     res.status(500).json({ error: "Error logging in" });
   }
 };
+
 
 export const refreshAccessToken = async (req, res) => {
   const schema = Joi.object({
