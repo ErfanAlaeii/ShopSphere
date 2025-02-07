@@ -55,6 +55,9 @@ app.use(
 // 6. Body parser to handle JSON payloads
 app.use(express.json({ limit: "10kb" })); // Limit payload size to 10KB
 
+// Authentication routes shouldn't require authentication
+app.use("/api/auth", authRoutes); 
+
 // 7. Authentication should come first before rate limiting
 app.use("/api", authenticate);
 
@@ -68,12 +71,12 @@ setupSwagger(app);
 app.use(express.static("public"));
 
 // 11. API routes
-app.use("/api/auth", authRoutes); // Authentication routes shouldn't require authentication
-app.use("/api/users", authenticate, userRoutes);
-app.use("/api/products", authenticate, productRoutes);
-app.use("/api/orders", authenticate, orderRoutes);
-app.use("/api/payments", authenticate, paymentRoutes);
-app.use("/api/reviews", authenticate, reviewRoutes);
+
+app.use("/api/users", userRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // 12. Catch-all route for undefined routes
 app.use((req, res, next) => {
