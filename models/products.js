@@ -1,3 +1,5 @@
+import Joi from 'joi';
+const { optional } = Joi;
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
@@ -27,6 +29,12 @@ const productSchema = new mongoose.Schema(
       required: [true, "Category is required"],
       trim: true,
     },
+    rating: {
+      type: Number,
+      optional,
+      min: 1,
+      max: 5,
+    },
     images: {
       type: [String],
       validate: {
@@ -35,7 +43,8 @@ const productSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
 );
+
+productSchema.set("timestamps",true)
 
 export const Product = mongoose.model("Product", productSchema);

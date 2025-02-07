@@ -23,9 +23,10 @@ const paymentSchema = new mongoose.Schema({
       message: (props) => `${props.value} is not a valid URL!`,
     },
   },
-  createdAt: { type: Date, default: Date.now },
 });
+
+paymentSchema.set("timestamps", true);
 
 const Payment = mongoose.model("Payment", paymentSchema);
 
-export default Payment
+export default Payment;

@@ -1,8 +1,8 @@
 import express from 'express';
-import { loginUser, registerUser, verifyToken, refreshAccessToken ,logoutUser} from '../controllers/authController.js';
-import { authenticate,authorizeRoles } from '../middlewares/authMiddleware.js';
+import { loginUser, registerUser, verifyToken, refreshAccessToken, logoutUser, verifyEmail } from '../controllers/authController.js';
+import { authenticate, authorizeRoles } from '../middlewares/authMiddleware.js';
 import { getAdminData } from '../controllers/adminController.js';
-import { validateRefreshTokenRequest } from '../middlewares/validationMiddleware.js';
+
 /**
  * @swagger
  * tags:
@@ -32,6 +32,7 @@ const router = express.Router();
  */
 
 router.get('/admin-only', authenticate, authorizeRoles('admin'), getAdminData);
+
 /**
  * @swagger
  * /auth/register:
@@ -60,6 +61,10 @@ router.get('/admin-only', authenticate, authorizeRoles('admin'), getAdminData);
  *         description: User already exists
  */
 router.post('/register', registerUser);
+
+router.get("/verify-email", verifyEmail);
+
+
 /**
  * @swagger
  * /auth/login:
@@ -131,7 +136,7 @@ router.post('/verify-token', verifyToken);
  *       401:
  *         description: Unauthorized, token is invalid or missing
  */
-router.get('/me', authenticate); 
+router.get('/me', authenticate);
 /**
  * @swagger
  * /auth/refresh-token:
@@ -156,7 +161,7 @@ router.get('/me', authenticate);
  *       401:
  *         description: Refresh token is invalid or expired
  */
-router.post('/refresh-token', validateRefreshTokenRequest, refreshAccessToken);
+router.post('/refresh-token', refreshAccessToken);
 /**
  * @swagger
  * /auth/logout:

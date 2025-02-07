@@ -35,6 +35,7 @@ const orderSchema = new mongoose.Schema(
     paymentDetails: {
       transactionId: { type: String },
       paymentMethod: { type: String },
+      amount: { type: Number },
       paymentDate: { type: Date },
     },
     shippingStatus: {
@@ -44,8 +45,6 @@ const orderSchema = new mongoose.Schema(
     },
     shippedDate: { type: Date },
     deliveryDate: { type: Date },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
   },
   {
     timestamps: true,

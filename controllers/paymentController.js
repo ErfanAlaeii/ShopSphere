@@ -75,6 +75,10 @@ export const getPaymentStatus = async (req, res) => {
     const { authority } = req.params;
     const payment = await getPaymentByAuthority(authority);
 
+    if (!payment) {
+      throw new Error("The desired payment was not found!");
+    }
+
     res.status(200).json({
       success: true,
       data: payment,
@@ -91,6 +95,9 @@ export const getPaymentStatus = async (req, res) => {
 export const getUserPayments = async (req, res) => {
   try {
     const userId = req.params.userId;
+    if (!req.user.id === userId) {
+      throw new Error("You do not have permission to view this information");
+    }
     const payments = await getPaymentsByUser(userId);
 
     res.status(200).json({

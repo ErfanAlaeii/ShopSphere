@@ -15,6 +15,7 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import errorHandler from "./middlewares/errorMiddleware.js";
 import logger from "./utils/logger.js";
 import { setupSwagger } from "./utils/swagger.js";
+import { authenticate } from "./middlewares/authMiddleware.js";
 
 dotenv.config();
 
@@ -24,11 +25,17 @@ const app = express();
 app.use(helmet());
 
 // 2. Enable CORS with restricted origins and methods
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:5000"],
-  methods: "GET,POST,PUT,DELETE,PATCH",
-  credentials: true,
-}));
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(",")
+  : ["http://localhost:3000"];
+
+app.use(
+  cors({
+    origin: allowedOrigins.length > 0 ? allowedOrigins : [],
+    methods: "GET,POST,PUT,DELETE,PATCH",
+    credentials: true,
+  })
+);
 
 // 3. Prevent XSS attacks
 app.use(xss());
@@ -48,29 +55,32 @@ app.use(
 // 6. Body parser to handle JSON payloads
 app.use(express.json({ limit: "10kb" })); // Limit payload size to 10KB
 
-// 7. Rate limiter for API abuse protection
+// 7. Authentication should come first before rate limiting
+app.use("/api", authenticate);
+
+// 8. Rate limiter for API abuse protection
 app.use("/api/", apiLimiter);
 
-// 8. Swagger documentation setup
+// 9. Swagger documentation setup
 setupSwagger(app);
 
-// 9. Serve static files if needed
+// 10. Serve static files if needed
 app.use(express.static("public"));
 
-// 10. API routes
-app.use("/api/users", userRoutes);
-app.use("/api/auth", apiLimiter, authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/reviews", reviewRoutes);
+// 11. API routes
+app.use("/api/auth", authRoutes); // Authentication routes shouldn't require authentication
+app.use("/api/users", authenticate, userRoutes);
+app.use("/api/products", authenticate, productRoutes);
+app.use("/api/orders", authenticate, orderRoutes);
+app.use("/api/payments", authenticate, paymentRoutes);
+app.use("/api/reviews", authenticate, reviewRoutes);
 
-// 11. Catch-all route for undefined routes
+// 12. Catch-all route for undefined routes
 app.use((req, res, next) => {
   res.status(404).json({ error: "API endpoint not found" });
 });
 
-// 12. Error handling middleware
+// 13. Error handling middleware
 app.use(errorHandler);
 
 export default app;

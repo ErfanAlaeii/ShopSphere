@@ -56,7 +56,7 @@ export const createPayment = async (orderId, userId) => {
 export const verifyPayment = async (authority, amount) => {
   try {
     console.log('Verifying payment with:', { authority, amount });
-    
+
     const payment = await Payment.findOne({ authority });
     if (!payment) {
       throw new CustomError(404, "Payment not found");
@@ -72,7 +72,7 @@ export const verifyPayment = async (authority, amount) => {
     try {
       const response = await zarinpal.PaymentVerification(verificationData);
       console.log('Raw Zarinpal response:', response);
-      
+
       if (response.status === 100) {
         payment.status = "success";
         await payment.save();
@@ -85,14 +85,18 @@ export const verifyPayment = async (authority, amount) => {
           console.log('Order marked as paid');
         }
 
-        return { success: true, refId: response.RefID, payment, order };
+        return { success: true, refId: response.refId, payment, order };
       }
 
-      payment.status = "failed";
-      await payment.save();
-      console.log('Payment marked as failed');
-      
-      throw new CustomError(400, `Zarinpal Error: ${response.status}`);
+      if (response.status !== 100) {
+        payment.status = "failed";
+        await payment.save();
+        console.log('Payment marked as failed');
+
+        throw new CustomError(400, `Zarinpal Error: ${response.status}`);
+      }
+
+
     } catch (zarinpalError) {
       console.error('Zarinpal API Error:', zarinpalError);
       throw new CustomError(400, `Zarinpal API Error: ${zarinpalError.message}`);

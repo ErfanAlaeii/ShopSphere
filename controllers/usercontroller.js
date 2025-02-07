@@ -57,8 +57,8 @@ export const toggleUserActiveStatus = async (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const { page = 1, limit = 10, role, isActive } = req.query;
-    const pageNumber = parseInt(page, 10);
-    const pageLimit = parseInt(limit, 10);
+    const pageNumber = parseInt(page);
+    const pageLimit = parseInt(limit);
 
     const filters = {};
     if (role) filters.role = role;

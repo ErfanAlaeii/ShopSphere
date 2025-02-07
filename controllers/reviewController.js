@@ -5,13 +5,24 @@ export const addReview = async (req, res) => {
   const { productId, rating, comment } = req.body;
 
   try {
+    if (!rating || rating < 1 || rating > 5) {
+      return res.status(400).json({ success: false, message: "Rating must be between 1 and 5" });
+    }
+
     const product = await Product.findById(productId);
     if (!product) {
       return res.status(404).json({ success: false, message: "Product not found" });
     }
 
+
+    const existingReview = await Review.findOne({ user: req.user.id, product: productId });
+    if (existingReview) {
+      return res.status(400).json({ success: false, message: "You have already reviewed this product" });
+    }
+
+
     const review = new Review({
-      user: req.user.id, 
+      user: req.user.id,
       product: productId,
       rating,
       comment,
@@ -19,11 +30,19 @@ export const addReview = async (req, res) => {
 
     await review.save();
 
+
+    const reviews = await Review.find({ product: productId });
+    const avgRating = reviews.reduce((acc, item) => acc + item.rating, 0) / reviews.length;
+
+    product.rating = avgRating;
+    await product.save();
+
     res.status(201).json({ success: true, data: review });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 export const getProductReviews = async (req, res) => {
   const { productId } = req.params;
