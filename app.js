@@ -41,7 +41,7 @@ app.use(
 app.use(xss());
 
 // 4. Prevent HTTP Parameter Pollution
-app.use(hpp());
+app.use(hpp({ whitelist: ["sort", "filters", "tags", "category"] }));
 
 // 5. Request logger
 app.use(
